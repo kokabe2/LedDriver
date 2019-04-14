@@ -1,0 +1,6 @@
+BasedOnStyle: Google
+Language: Cpp
+MaxEmptyLinesToKeep: 2
+IndentWidth: 4
+BreakBeforeBinaryOperators: All
+BreakBeforeBraces: WebKit
