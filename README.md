@@ -1,5 +1,7 @@
 # LedDriver
 
+[![Build Status](https://travis-ci.org/kokabe2/LedDriver.svg?branch=master)](https://travis-ci.org/kokabe2/LedDriver)
+
 A LED driver for embedded systems.
 
 ## Features
