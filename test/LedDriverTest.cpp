@@ -8,15 +8,15 @@ extern "C" {
 
 class LedDriverTest : public ::testing::Test {
    protected:
-    uint8_t kAvailableBits = 0xDB;
-    uint8_t kInitialValue = 0x20;
     uint8_t virtualLeds;
     LedDriver instance;
 
     virtual void SetUp()
     {
-        virtualLeds = kInitialValue | kAvailableBits;
-        instance = LedDriver_Create(&virtualLeds, kAvailableBits);
+        uint8_t availableBits = 0xDB;
+        uint8_t initialValue = 0x20;
+        virtualLeds = initialValue | availableBits;
+        instance = LedDriver_Create(&virtualLeds, availableBits);
         SpyRuntimeError_Reset();
     }
 

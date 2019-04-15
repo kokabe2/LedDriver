@@ -82,7 +82,7 @@ static bool IsLedOutOfBounds(int ledNumber)
     return true;
 }
 
-static uint8_t ConvertToBit(int ledNumber) { return 1 << ledNumber - 1; }
+static uint8_t ConvertToBit(int ledNumber) { return 1 << (ledNumber - 1); }
 
 static bool IsLedUnavailable(LedDriver self, int ledNumber)
 {
