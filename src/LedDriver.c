@@ -12,41 +12,41 @@ enum {
 struct LedDriverStruct {
     bool isUsed;
     uint8_t* ioAddress;
-    uint8_t bitmask;
+    uint8_t (*decoder)(int);
 };
 
 
 static struct LedDriverStruct instance = {false, NULL, 0};
 
 
-static bool Validate(uint8_t* ioAddress, uint8_t bitmask)
+static bool Validate(uint8_t* ioAddress, uint8_t (*decoder)(int))
 {
     if (!ioAddress)
         RUNTINE_ERROR("LED Driver: null I/O address", 0);
-    else if (!bitmask)
-        RUNTINE_ERROR("LED Driver: no LEDs available", 0);
+    else if (!decoder)
+        RUNTINE_ERROR("LED Driver: null decode function", 0);
     else
         return true;
 
     return false;
 }
 
-static LedDriver NewInstance(uint8_t* ioAddress, uint8_t bitmask)
+static LedDriver NewInstance(uint8_t* ioAddress, uint8_t (*decoder)(int))
 {
     if (instance.isUsed) return NULL;
 
     instance.isUsed = true;
     instance.ioAddress = ioAddress;
-    instance.bitmask = bitmask;
+    instance.decoder = decoder;
 
     return &instance;
 }
 
-LedDriver LedDriver_Create(uint8_t* ioAddress, uint8_t bitmask)
+LedDriver LedDriver_Create(uint8_t* ioAddress, uint8_t (*decoder)(int))
 {
-    if (!Validate(ioAddress, bitmask)) return NULL;
+    if (!Validate(ioAddress, decoder)) return NULL;
 
-    LedDriver self = NewInstance(ioAddress, bitmask);
+    LedDriver self = NewInstance(ioAddress, decoder);
     if (self) LedDriver_TurnAllOff(self);
 
     return self;
@@ -82,47 +82,34 @@ static bool IsLedOutOfBounds(int ledNumber)
     return true;
 }
 
-static uint8_t ConvertToBit(int ledNumber) { return 1 << (ledNumber - 1); }
-
-static bool IsLedUnavailable(LedDriver self, int ledNumber)
-{
-    if (self->bitmask & ConvertToBit(ledNumber)) return false;
-
-    RUNTINE_ERROR("LED Driver: unavailable LED number", ledNumber);
-    return true;
-}
-
 static void SetLedImageBit(LedDriver self, int ledNumber)
 {
-    *self->ioAddress |= ConvertToBit(ledNumber);
+    *self->ioAddress |= self->decoder(ledNumber);
 }
 
 void LedDriver_TurnOn(LedDriver self, int ledNumber)
 {
-    if (IsInvalid(self) || IsLedOutOfBounds(ledNumber)
-        || IsLedUnavailable(self, ledNumber))
-        return;
+    if (IsInvalid(self) || IsLedOutOfBounds(ledNumber)) return;
 
     SetLedImageBit(self, ledNumber);
 }
 
 static void ClearLedImageBit(LedDriver self, int ledNumber)
 {
-    *self->ioAddress &= ~ConvertToBit(ledNumber);
+    *self->ioAddress &= ~self->decoder(ledNumber);
 }
 
 void LedDriver_TurnOff(LedDriver self, int ledNumber)
 {
-    if (IsInvalid(self) || IsLedOutOfBounds(ledNumber)
-        || IsLedUnavailable(self, ledNumber))
-        return;
+    if (IsInvalid(self) || IsLedOutOfBounds(ledNumber)) return;
 
     ClearLedImageBit(self, ledNumber);
 }
 
 static void SetAllLedImageBits(LedDriver self)
 {
-    *self->ioAddress |= self->bitmask;
+    for (int i = kFirstLed; i <= kLastLed; i++)
+        *self->ioAddress |= self->decoder(i);
 }
 
 void LedDriver_TurnAllOn(LedDriver self)
@@ -134,7 +121,8 @@ void LedDriver_TurnAllOn(LedDriver self)
 
 static void ClearAllLedImageBits(LedDriver self)
 {
-    *self->ioAddress &= ~self->bitmask;
+    for (int i = kFirstLed; i <= kLastLed; i++)
+        *self->ioAddress &= ~self->decoder(i);
 }
 
 void LedDriver_TurnAllOff(LedDriver self)
@@ -146,14 +134,12 @@ void LedDriver_TurnAllOff(LedDriver self)
 
 static bool IsLedImageBitOn(LedDriver self, int ledNumber)
 {
-    return *self->ioAddress & ConvertToBit(ledNumber);
+    return *self->ioAddress & self->decoder(ledNumber);
 }
 
 bool LedDriver_IsOn(LedDriver self, int ledNumber)
 {
-    if (IsInvalid(self) || IsLedOutOfBounds(ledNumber)
-        || IsLedUnavailable(self, ledNumber))
-        return false;
+    if (IsInvalid(self) || IsLedOutOfBounds(ledNumber)) return false;
 
     return IsLedImageBitOn(self, ledNumber);
 }

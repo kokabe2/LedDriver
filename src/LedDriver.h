@@ -6,7 +6,7 @@
 
 typedef struct LedDriverStruct* LedDriver;
 
-LedDriver LedDriver_Create(uint8_t* ioAddress, uint8_t bitmask);
+LedDriver LedDriver_Create(uint8_t* ioAddress, uint8_t (*decoder)(int));
 void LedDriver_Destroy(LedDriver* self);
 void LedDriver_TurnOn(LedDriver self, int ledNumber);
 void LedDriver_TurnOff(LedDriver self, int ledNumber);

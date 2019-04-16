@@ -14,10 +14,9 @@ A LED driver for embedded systems.
 
 ## Assumptions and constraints
 
-- The implementation of LEDs is memory-mapped I/O
+- The implementation of LEDs is memory-mapped I/O and 8 bits
 - The I/O address is writable and readable
 - The bit value 1 is LED on and 0 is LED off
-- The LED of LSB is the number 1 and the LED of MSB is the number 8
 
 ## Usage
 
@@ -29,7 +28,7 @@ Then just #include "LedDriver.h" to use the LedDriver functions.
 ### LedDriver_Create
 
 ```C
-LedDriver LedDriver_Create(uint8_t* ioAddress, uint8_t bitmask);
+LedDriver LedDriver_Create(uint8_t* ioAddress, uint8_t (*decoder)(int));
 ```
 
 Create a LedDriver instance.
@@ -39,7 +38,7 @@ Note: All LEDs will be off if successfully.
 Inputs:
 
 - `ioAddress` - The I/O address for LEDs.
-- `bitmask` - The bits for available LEDs in the I/O address.
+- `decoder` - The function to convert to bit from the LED number (1 to 8).
 
 Returns the instance if created successfully, NULL if an error occurred.
 

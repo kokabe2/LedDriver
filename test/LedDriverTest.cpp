@@ -6,6 +6,11 @@ extern "C" {
 }
 
 
+namespace {
+const uint8_t kLedBits[8] = {0x01, 0x02, 0x00, 0x08, 0x10, 0x00, 0x40, 0x80};
+uint8_t Decode(int ledNumber) { return kLedBits[ledNumber - 1]; }
+}  // namespace
+
 class LedDriverTest : public ::testing::Test {
    protected:
     uint8_t virtualLeds;
@@ -13,10 +18,8 @@ class LedDriverTest : public ::testing::Test {
 
     virtual void SetUp()
     {
-        uint8_t availableBits = 0xDB;
-        uint8_t initialValue = 0x20;
-        virtualLeds = initialValue | availableBits;
-        instance = LedDriver_Create(&virtualLeds, availableBits);
+        virtualLeds = 0xF0;
+        instance = LedDriver_Create(&virtualLeds, Decode);
         SpyRuntimeError_Reset();
     }
 
@@ -33,7 +36,7 @@ TEST_F(LedDriverTest, Create)
 TEST_F(LedDriverTest, CreateMoreThanOnce)
 {
     uint8_t secondLeds = 0x18;
-    LedDriver secondInstance = LedDriver_Create(&secondLeds, 0xFF);
+    LedDriver secondInstance = LedDriver_Create(&secondLeds, Decode);
 
     EXPECT_EQ(NULL, secondInstance);
     EXPECT_EQ(0x18, secondLeds) << "Shall not be changed";
@@ -44,7 +47,7 @@ TEST_F(LedDriverTest, CreateWithNullAddress)
 {
     LedDriver_Destroy(&instance);
 
-    instance = LedDriver_Create(NULL, 0xFF);
+    instance = LedDriver_Create(NULL, Decode);
 
     EXPECT_EQ(NULL, instance);
     EXPECT_STREQ("LED Driver: null I/O address",
@@ -56,11 +59,11 @@ TEST_F(LedDriverTest, CreateWithNoLedsAvailable)
     LedDriver_Destroy(&instance);
 
     virtualLeds = 0xFB;
-    instance = LedDriver_Create(&virtualLeds, 0x00);
+    instance = LedDriver_Create(&virtualLeds, NULL);
 
     EXPECT_EQ(NULL, instance);
     EXPECT_EQ(0xFB, virtualLeds) << "Shall not be changed";
-    EXPECT_STREQ("LED Driver: no LEDs available",
+    EXPECT_STREQ("LED Driver: null decode function",
                  SpyRuntimeError_GetLastError());
 }
 
@@ -163,14 +166,11 @@ TEST_F(LedDriverTest, TurnOnOutOfBounds)
     EXPECT_EQ(3141, SpyRuntimeError_GetLastParameter());
 }
 
-TEST_F(LedDriverTest, TurnOnWithUnavailableLedNumber)
+TEST_F(LedDriverTest, TurnOnWithInvalidLedNumber)
 {
     LedDriver_TurnOn(instance, 3);
 
     EXPECT_EQ(0x20, virtualLeds) << "Shall not be changed";
-    EXPECT_STREQ("LED Driver: unavailable LED number",
-                 SpyRuntimeError_GetLastError());
-    EXPECT_EQ(3, SpyRuntimeError_GetLastParameter());
 }
 
 TEST_F(LedDriverTest, TurnOnWithNullInstance)
@@ -225,16 +225,13 @@ TEST_F(LedDriverTest, TurnOffOutOfBounds)
     EXPECT_EQ(3141, SpyRuntimeError_GetLastParameter());
 }
 
-TEST_F(LedDriverTest, TurnOffWithUnavailableLedNumber)
+TEST_F(LedDriverTest, TurnOffWithInvalidLedNumber)
 {
     LedDriver_TurnAllOn(instance);
 
     LedDriver_TurnOff(instance, 6);
 
     EXPECT_EQ(0xFB, virtualLeds) << "Shall not be changed";
-    EXPECT_STREQ("LED Driver: unavailable LED number",
-                 SpyRuntimeError_GetLastError());
-    EXPECT_EQ(6, SpyRuntimeError_GetLastParameter());
 }
 
 TEST_F(LedDriverTest, TurnOffWithNullInstance)
@@ -270,12 +267,9 @@ TEST_F(LedDriverTest, IsOnOutOfBounds)
     EXPECT_EQ(3141, SpyRuntimeError_GetLastParameter());
 }
 
-TEST_F(LedDriverTest, IsOnWithUnavailableLedNumber)
+TEST_F(LedDriverTest, IsOnWithInvalidLedNumber)
 {
     EXPECT_FALSE(LedDriver_IsOn(instance, 3));
-    EXPECT_STREQ("LED Driver: unavailable LED number",
-                 SpyRuntimeError_GetLastError());
-    EXPECT_EQ(3, SpyRuntimeError_GetLastParameter());
 }
 
 TEST_F(LedDriverTest, IsOnWithNullInstance)
@@ -306,14 +300,11 @@ TEST_F(LedDriverTest, IsOffOutOfBounds)
     EXPECT_EQ(3141, SpyRuntimeError_GetLastParameter());
 }
 
-TEST_F(LedDriverTest, IsOffWithUnavailableLedNumber)
+TEST_F(LedDriverTest, IsOffWithInvalidLedNumber)
 {
     LedDriver_TurnAllOn(instance);
 
     EXPECT_TRUE(LedDriver_IsOff(instance, 6));
-    EXPECT_STREQ("LED Driver: unavailable LED number",
-                 SpyRuntimeError_GetLastError());
-    EXPECT_EQ(6, SpyRuntimeError_GetLastParameter());
 }
 
 TEST_F(LedDriverTest, IsOffWithNullInstance)
