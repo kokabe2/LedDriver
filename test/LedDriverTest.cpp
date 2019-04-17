@@ -33,14 +33,15 @@ TEST_F(LedDriverTest, Create)
     EXPECT_EQ(0x20, virtualLeds) << "All LEDs Shall be off";
 }
 
-TEST_F(LedDriverTest, CreateMoreThanOnce)
+TEST_F(LedDriverTest, CreateMultipleInstance)
 {
     uint8_t secondLeds = 0x18;
     LedDriver secondInstance = LedDriver_Create(&secondLeds, Decode);
 
-    EXPECT_EQ(NULL, secondInstance);
-    EXPECT_EQ(0x18, secondLeds) << "Shall not be changed";
+    EXPECT_TRUE(secondInstance != NULL);
+    EXPECT_EQ(0x00, secondLeds) << "All LEDs Shall be off";
     EXPECT_EQ(0x20, virtualLeds) << "Shall not be changed";
+    LedDriver_Destroy(&secondInstance);
 }
 
 TEST_F(LedDriverTest, CreateWithNullAddress)

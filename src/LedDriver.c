@@ -1,6 +1,7 @@
 ﻿#include "LedDriver.h"
 
 #include <stddef.h>
+#include <stdlib.h>
 #include "RuntimeError.h"
 
 
@@ -10,13 +11,9 @@ enum {
 };
 
 struct LedDriverStruct {
-    bool isUsed;
     uint8_t* ioAddress;
     uint8_t (*decoder)(int);
 };
-
-
-static struct LedDriverStruct instance = {false, NULL, 0};
 
 
 static bool Validate(uint8_t* ioAddress, uint8_t (*decoder)(int))
@@ -33,13 +30,13 @@ static bool Validate(uint8_t* ioAddress, uint8_t (*decoder)(int))
 
 static LedDriver NewInstance(uint8_t* ioAddress, uint8_t (*decoder)(int))
 {
-    if (instance.isUsed) return NULL;
+    LedDriver self = calloc(1, sizeof(struct LedDriverStruct));
+    if (!self) return NULL;
 
-    instance.isUsed = true;
-    instance.ioAddress = ioAddress;
-    instance.decoder = decoder;
+    self->ioAddress = ioAddress;
+    self->decoder = decoder;
 
-    return &instance;
+    return self;
 }
 
 LedDriver LedDriver_Create(uint8_t* ioAddress, uint8_t (*decoder)(int))
@@ -54,7 +51,7 @@ LedDriver LedDriver_Create(uint8_t* ioAddress, uint8_t (*decoder)(int))
 
 static void DeleteInstance(LedDriver* self)
 {
-    (*self)->isUsed = false;
+    free(*self);
     *self = NULL;
 }
 

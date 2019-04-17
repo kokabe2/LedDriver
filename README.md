@@ -6,9 +6,8 @@ A LED driver for embedded systems.
 
 ## Features
 
-- Single instance module
+- Multiple-instance module
 - Written in C
-- No dynamic memory allocation
 - Testability
 - MIT license
 
@@ -17,6 +16,7 @@ A LED driver for embedded systems.
 - The implementation of LEDs is memory-mapped I/O and 8 bits
 - The I/O address is writable and readable
 - The bit value 1 is LED on and 0 is LED off
+- Dynamic memory allocation
 
 ## Usage
 
