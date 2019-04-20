@@ -55,7 +55,7 @@ TEST_F(LedDriverTest, CreateWithNullAddress)
                  SpyRuntimeError_GetLastError());
 }
 
-TEST_F(LedDriverTest, CreateWithNoLedsAvailable)
+TEST_F(LedDriverTest, CreateWithNullDecoder)
 {
     LedDriver_Destroy(&instance);
 
@@ -280,7 +280,6 @@ TEST_F(LedDriverTest, IsOnWithNullInstance)
 }
 
 TEST_F(LedDriverTest, IsOff) { EXPECT_TRUE(LedDriver_IsOff(instance, 4)); }
-
 TEST_F(LedDriverTest, IsOffAfterTurnOn)
 {
     LedDriver_TurnOn(instance, 8);
